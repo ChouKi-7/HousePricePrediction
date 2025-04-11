@@ -2,12 +2,12 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error
+from sklearn.linear_model import Ridge
+from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 
-from compare_models import evaluate_model
-from compare_models import tune_model
+from utils import tune_model
 
 data = pd.read_csv("data/processed/clean_train.csv")
 
@@ -53,79 +53,46 @@ print("MAE after log inverse (真实房价下):", round(real_mae, 2))
 print("-----------------------------")
 
 '''
-三种模型结果比较
-MSE
+Ridgeを試す
+2025/4/11
 '''
-results = []
+# LinearRegressionをRidgeに切り替え
+ridge_model = Ridge(alpha=0.1)
+ridge_model.fit(X_train,y_train)
 
-# Linear Regression
-results.append(evaluate_model(
-    "LinearRegression",
-    LinearRegression(),
-    X_train, X_val, y_train, y_val
-))
+y_pred_ridge = ridge_model.predict(X_val)
 
-# Random Forest
-results.append(evaluate_model(
-    "RandomForest",
-    RandomForestRegressor(random_state=42),
-    X_train, X_val, y_train, y_val
-))
+# 还原为真实价格
+y_pred_real_ridge = np.expm1(y_pred_ridge)
+y_val_real_ridge = np.expm1(y_val)
 
-# ------パーラメント最適化追加（4/10）--------
-rf_param_grid = {
-    "n_estimators": [100, 200],
-    "max_depth": [None, 5, 20],
-    "min_samples_split": [2, 5, 10]
-}
-best_rf = tune_model(
-    RandomForestRegressor(random_state=42), 
-    rf_param_grid, 
-    X_train, 
+MAE_ridge = mean_absolute_error(y_val_real_ridge, y_pred_real_ridge)
+MSE_ridge = mean_squared_error(y_val_real_ridge, y_pred_real_ridge)
+
+print("✅ Ridge Regression 结果:")
+print("MAE (真实价格):", round(MAE_ridge, 2))
+print("MSE (真实价格):", round(MSE_ridge, 2))
+
+'''
+param最適化
+'''
+ridge_param_grid = {"alpha":[0.01,0.1,1.0,10.0,20.0,50.0]}
+
+best_ridge = tune_model(
+    Ridge(),
+    ridge_param_grid,
+    X_train,
     y_train
 )
+y_pred_ridge_best = best_ridge.predict(X_val)
 
-results.append(evaluate_model(
-    "Tuned RandomForest",
-    best_rf,
-    X_train, X_val, y_train, y_val
-))
+y_pred_real_ridge_best = np.expm1(y_pred_ridge_best)
+y_val_real_ridge_best = np.expm1(y_val)
 
-# XGBoost
-results.append(evaluate_model(
-    "XGBoost",
-    XGBRegressor(random_state=42, verbosity=0),
-    X_train, X_val, y_train, y_val
-))
-
-# ------パーラメント最適化追加（4/10）--------
-xgb_param_grid = {
-    "n_estimators": [100, 200],            # 森林中树的数量
-    "max_depth": [3, 6, 10],               # 每棵树的最大深度
-    "learning_rate": [0.01, 0.1],          # 学习率（越小越稳越慢）
-    "subsample": [0.8, 1.0],               # 每棵树的训练样本比例（防止过拟合）
-    "colsample_bytree": [0.8, 1.0],        # 每棵树用的特征比例
-    "reg_alpha": [0, 1],                   # L1正则化强度
-    "reg_lambda": [1, 10]                  # L2正则化强度
-}
-best_xgb = tune_model(
-    XGBRegressor(random_state=42, verbosity=0),
-    xgb_param_grid,
-    X_train, 
-    y_train
-)
-
-results.append(evaluate_model(
-    "Tuned XGBoost",
-    best_xgb,
-    X_train, X_val, y_train, y_val
-))
-
-# Output result comparison
-result_df = pd.DataFrame(results)
-result_df = result_df.sort_values(by="Validation MSE")
+MAE_ridge_best = mean_absolute_error(y_val_real_ridge_best,y_pred_real_ridge)
+MSE_ridge_best = mean_squared_error(y_val_real_ridge_best,y_pred_real_ridge_best)
 
 print("-----------------------------")
-print("\n📊 Model Comparison Result:")
-print(result_df.to_string(index=False))
-
+print("Ridge Regression (Best Alpha)")
+print("MAE_BEST:", round(MAE_ridge_best, 2))
+print("MSE_BEST:", round(MSE_ridge_best, 2))

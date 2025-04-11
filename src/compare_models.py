@@ -7,45 +7,104 @@ from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
 from xgboost import XGBRegressor
 
-def evaluate_model(name, model, X_train, X_val, y_train, y_val):
-    model.fit(X_train, y_train)
+from utils import evaluate_model
+from utils import tune_model
 
-    # # log変換なし
-    # train_pred = model.predict(X_train)
-    # val_pred = model.predict(X_val)
+data = pd.read_csv("data/processed/clean_train.csv")
 
-    # train_mse = mean_squared_error(y_train, train_pred)
-    # val_mse = mean_squared_error(y_val, val_pred)
+'''
+线性回归(Linear Regression)
+MAE
+'''
+# 
+y = data['SalePrice']
+X = data.drop('SalePrice', axis = 1)
 
-    # log変換あり
-    # 预测（log空间）
-    y_train_pred_log = model.predict(X_train)
-    y_val_pred_log = model.predict(X_val)
+X_encoded = pd.get_dummies(X)
 
-    # 还原为真实价格
-    y_train_pred = np.expm1(y_train_pred_log)
-    y_val_pred = np.expm1(y_val_pred_log)
-    y_train_true = np.expm1(y_train)
-    y_val_true = np.expm1(y_val)
+# log変換処理追加
+y_log = np.log1p(y)
 
-    # MSE计算（原始空间）
-    train_mse = mean_squared_error(y_train_true, y_train_pred)
-    val_mse = mean_squared_error(y_val_true, y_val_pred)
+# log変換抜け
+# X_train,X_val,y_train,y_val = train_test_split(X_encoded,y,test_size=0.2,random_state=42)
+# log変換あり、y_logを用いてデータを分割
+X_train,X_val,y_train,y_val = train_test_split(X_encoded,y_log,test_size=0.2,random_state=42)
+print("-----------------------------")
+print("Sale Price Mean:", y.mean())
 
-    return {
-        "Model": name,
-        "Train MSE": round(train_mse, 2),
-        "Validation MSE": round(val_mse, 2),
-        "Overfit Gap": round(val_mse - train_mse, 2),
-        "Overfit Gap Rate": round((val_mse - train_mse) / val_mse * 100, 2)
-    }
+'''
+三种模型结果比较
+MSE
+'''
+results = []
 
-# ========================
-# GridSearchでのハイパーパラメータチューニング
-# ========================
-def tune_model(model, param_grid, X_train, y_train):
-    grid_search = GridSearchCV(model, param_grid, cv=3, scoring='neg_mean_squared_error', verbose=1, n_jobs=-1)
-    grid_search.fit(X_train, y_train)
-    print("Best Params:", grid_search.best_params_)
-    return grid_search.best_estimator_
+# Linear Regression
+results.append(evaluate_model(
+    "LinearRegression",
+    LinearRegression(),
+    X_train, X_val, y_train, y_val
+))
 
+# Random Forest
+results.append(evaluate_model(
+    "RandomForest",
+    RandomForestRegressor(random_state=42),
+    X_train, X_val, y_train, y_val
+))
+
+# ------パーラメント最適化追加（4/10）--------
+rf_param_grid = {
+    "n_estimators": [100, 200],
+    "max_depth": [None, 5, 20],
+    "min_samples_split": [2, 5, 10]
+}
+best_rf = tune_model(
+    RandomForestRegressor(random_state=42), 
+    rf_param_grid, 
+    X_train, 
+    y_train
+)
+
+results.append(evaluate_model(
+    "Tuned RandomForest",
+    best_rf,
+    X_train, X_val, y_train, y_val
+))
+
+# XGBoost
+results.append(evaluate_model(
+    "XGBoost",
+    XGBRegressor(random_state=42, verbosity=0),
+    X_train, X_val, y_train, y_val
+))
+
+# ------パーラメント最適化追加（4/10）--------
+xgb_param_grid = {
+    "n_estimators": [100, 200],            # 森林中树的数量
+    "max_depth": [3, 6, 10],               # 每棵树的最大深度
+    "learning_rate": [0.01, 0.1],          # 学习率（越小越稳越慢）
+    "subsample": [0.8, 1.0],               # 每棵树的训练样本比例（防止过拟合）
+    "colsample_bytree": [0.8, 1.0],        # 每棵树用的特征比例
+    "reg_alpha": [0, 1],                   # L1正则化强度
+    "reg_lambda": [1, 10]                  # L2正则化强度
+}
+best_xgb = tune_model(
+    XGBRegressor(random_state=42, verbosity=0),
+    xgb_param_grid,
+    X_train, 
+    y_train
+)
+
+results.append(evaluate_model(
+    "Tuned XGBoost",
+    best_xgb,
+    X_train, X_val, y_train, y_val
+))
+
+# Output result comparison
+result_df = pd.DataFrame(results)
+result_df = result_df.sort_values(by="Validation MSE")
+
+print("-----------------------------")
+print("\n📊 Model Comparison Result:")
+print(result_df.to_string(index=False))

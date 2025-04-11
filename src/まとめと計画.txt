@@ -139,3 +139,31 @@ Best Params: {'colsample_bytree': 0.8, 'learning_rate': 0.1, 'max_depth': 3, 'n_
            XGBoost    996434.98    693102947.69 692106512.71             99.86
       RandomForest 129288536.60    884971728.68 755683192.08             85.39
 Tuned RandomForest 170676359.24    885379048.02 714702688.78             80.72
+
+---------------from Chou 2025/4/11-----------------
+
+今日Todo：
+1:继续尝试优化
+2:确定模型
+3:预测test
+
+1.1:使用 Ridge（L2 正则化线性模型）
+ •替换 LinearRegression 为 Ridge
+ ->结果
+  Ridge Regression 结果:
+  MAE (真实价格): 15001.43
+  MSE (真实价格): 518563430.67
+  Fitting 3 folds for each of 6 candidates, totalling 18 fits
+  Best Params: {'alpha': 20.0}
+  -----------------------------
+  Ridge Regression (Best Alpha)
+  MAE_BEST: 15001.43
+  MSE_BEST: 652237697.1
+
+  MAE没什么变化，但是MSE略微提高，原因（from chatgpt）:调整 Ridge 的正则参数后，模型变得更保守，避免过拟合，但在极端值上可能误差变大，导致 MSE 上升而 MAE 不变 是正常现象。
+新问题：我该如何判断用mae还是mse来选择新模型呢？
+（from chatgpt）：	选 MAE 还是 MSE，要看你更在乎“平均表现”还是“极端误差”，也要看你的业务目标和误差容忍度。
+（from Chou）总结：mae可以显示平均错了多少，平均误差多少，更适合用于评估整体稳定性。而mse对错的最大的更明显，如果看一组数据平均的话用mae，如果是看一组数据是否有那种差距极大的数据，比如豪宅价格和普通民居，mse更合适.	
+•	关注整体平均表现 → 用 MAE
+•	关注是否有极端错误 → 用 MSE
+1.2:尝试Lasso
