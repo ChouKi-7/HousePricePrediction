@@ -1,0 +1,141 @@
+---------------from Chou 2025/4/9-----------------
+result:
+Sale Price Mean: 180921.19589041095
+Validation MAE: 18612.20411482397
+Train MAE:  12747.129735949484
+Overfit Gap Rate: 31.511981830261355
+
+📊 Model Comparison Result:
+           Model    Train MSE  Validation MSE  Overfit Gap  Overfit Gap Rate
+         XGBoost   1664961.01    722377518.72 720712557.72             99.77
+    RandomForest 123345317.07    839886750.21 716541433.13             85.31
+LinearRegression 387845561.76    876261511.25 488415949.50             55.74
+
+結論：現状の結果はあまり良くない。
+　　　特に価格差が大きい物件（異常値）の影響が非常に大きく、モデルの評価指標（特にMSE）を大きく悪化させている。
+	•	log変換を用いて価格のスケールを圧縮し、異常値の影響を軽減する
+  • ハイパーパラメータ最適化
+  •	または、価格帯で物件を分類（例：高級住宅 vs 一般住宅）、
+  それぞれで別々にモデルを構築する「セグメント建模」を行うことで、より精度の高い予測を目指す
+
+---------------from ChatGPT 2025/4/10-----------------
+
+【フェーズ1：初期モデル構築と誤差分析のまとめ】
+
+【データ基本情報】
+
+	•	予測対象：SalePrice（物件価格）
+	•	平均価格：180,921.20
+
+【モデル別の検証結果（評価指標：MSE）】
+
+モデル	学習データ MSE	検証データ MSE	Overfit Gap（差）	Overfit Gap Rate
+XGBoost	1,664,961	722,377,519	720,712,558	99.77%
+RandomForest	123,345,317	839,886,750	716,541,433	85.31%
+LinearRegression	387,845,561	876,261,511	488,415,949	55.74%
+
+※結論：すべてのモデルにおいて、学習データより検証データの誤差が大幅に大きく、強い過学習（オーバーフィッティング）が発生している。特に木系モデル（XGBoost・RandomForest）で顕著。
+
+【MAE（平均絶対誤差）を使った結果（Linear Regression）】
+
+	•	学習 MAE：12,747.13
+	•	検証 MAE：18,612.20
+	•	Overfit Gap Rate：約 31.51%
+	•	平均価格に対する誤差の割合：約 10.3%
+
+※補足：MAEは異常値に対する影響が少ないため、MSEに比べて過学習の兆候が見えにくくなる傾向がある。
+
+【主な問題点】
+
+	•	異常値（高価格物件）の影響が大きい
+	•	価格分布が右に大きく偏っている
+	•	MSEの特性により、異常値によって誤差が非常に大きくなっている
+
+【次にやるべきこと（To-do）】
+
+【案1】log変換によるスケーリング調整
+	•	SalePriceにlog1p()変換を適用し、価格のバラつきを圧縮
+	•	高価格物件による誤差支配を抑える
+	•	学習後、expm1()で元に戻す
+	•	特にMSEを評価指標として使用する場合に効果的
+
+【案2】物件タイプ（価格）によるセグメント建模
+	•	価格帯で物件を分類
+例：上位10％を「高級住宅」、それ以下を「一般住宅」
+	•	各カテゴリごとに別のモデルを構築
+	•	モデルごとにMAEやMSEを個別に評価
+	•	一般物件が高価格帯の影響を受けず、精度が向上する可能性あり
+
+【案3】ハイパーパラメータの調整（モデルごとの最適化）
+
+	•	GridSearchCV や RandomizedSearchCV を用いて、各モデルのハイパーパラメータを自動検索
+	•	適切なパラメータを見つけることで、精度向上や過学習の抑制が可能
+	•	特に以下のモデルに有効：
+　- RandomForest: 木の数 (n_estimators), 深さ (max_depth)
+　- XGBoost: 学習率 (learning_rate), 正則項 (reg_alpha, reg_lambda) など
+
+【案4】正則化（モデルの複雑さを制御）
+
+	•	線形回帰系モデルに対して、正則化（L1/L2） を導入
+	•	不要な特徴量の影響を抑えたり、過学習の防止に有効
+	•	使用例：
+　- Ridge（リッジ回帰）: L2正則化、滑らかにする
+　- Lasso（ラッソ回帰）: L1正則化、特徴量の選択も兼ねる
+	•	XGBoost などツリーモデルにも reg_alpha, reg_lambda による正則化があり、活用すべき
+
+【結論まとめ】
+
+現段階のモデルは、データの価格分布の偏りおよび異常値の影響によって、過学習や精度低下が発生している。
+次のステップでは、log変換による正規化や、セグメント建模による個別最適化の適用を推奨する。
+
+
+---------------from Chou 2025/4/10-----------------
+
+给RandomForest和XGBoost增加了调参的处理，得到结果如下：
+RandomForestRegressor および XGBRegressor に対して GridSearchCV を用いたハイパーパラメータの調整を実施。
+以下の最適パラメータが得られた：
+
+---
+Fitting 3 folds for each of 18 candidates, totalling 54 fits
+Best Params: {'max_depth': None, 'min_samples_split': 5, 'n_estimators': 100}
+---
+Fitting 3 folds for each of 192 candidates, totalling 576 fits
+Best Params: {'colsample_bytree': 0.8, 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 200, 'reg_alpha': 0, 'reg_lambda': 1, 'subsample': 0.8}
+-----------------------------
+
+📊 Model Comparison Result:
+             Model    Train MSE  Validation MSE  Overfit Gap  Overfit Gap Rate
+     Tuned XGBoost 115846936.00    580305235.45 464458299.45             80.04
+           XGBoost   1664961.01    722377518.72 720712557.72             99.77
+      RandomForest 123345317.07    839886750.21 716541433.13             85.31
+Tuned RandomForest 165554995.63    848934131.04 683379135.42             80.50
+  LinearRegression 387845561.76    876261511.25 488415949.50             55.74
+
+结论：
+XGBoost和RandomForest的TrainMSE的结果在一定程度上抑制了过拟合现象的发生（学習過剰の抑制）
+特别是XGBoost从722M变为了580M（過学習が緩和された）
+两者都在一定程度上获得了优化，但是完全不够。（バリデーション誤差自体はまだ非常に大きく、さらなる改善が必要）
+所以下一步可能还有尝试log变换和使用正则的方式
+
+---------------from Chou 2025/4/10-----------------
+加入log变换后的结果如下：
+-----------------------------
+Sale Price Mean: 180921.19589041095
+Validation MAE: 0.08995228590612239
+Train MAE:  0.06346046570435872
+Overfit Gap Rate: 29.45096940550409
+MAE after log inverse (真实房价下): 15030.64
+-----------------------------
+Fitting 3 folds for each of 18 candidates, totalling 54 fits
+Best Params: {'max_depth': 20, 'min_samples_split': 5, 'n_estimators': 200}
+Fitting 3 folds for each of 192 candidates, totalling 576 fits
+Best Params: {'colsample_bytree': 0.8, 'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 200, 'reg_alpha': 0, 'reg_lambda': 1, 'subsample': 0.8}
+-----------------------------
+
+📊 Model Comparison Result:
+             Model    Train MSE  Validation MSE  Overfit Gap  Overfit Gap Rate
+  LinearRegression 306741365.66    524094655.97 217353290.31             41.47
+     Tuned XGBoost 125043788.09    634628075.99 509584287.90             80.30
+           XGBoost    996434.98    693102947.69 692106512.71             99.86
+      RandomForest 129288536.60    884971728.68 755683192.08             85.39
+Tuned RandomForest 170676359.24    885379048.02 714702688.78             80.72
