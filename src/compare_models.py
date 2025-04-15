@@ -104,20 +104,6 @@ results.append(evaluate_model(
 result_df = pd.DataFrame(results)
 result_df = result_df.sort_values(by="Validation MSE")
 
-print("-----------------------------")
+print("-----------------------------Model Comparison")
 print("\n📊 Model Comparison Result:")
 print(result_df.to_string(index=False))
-
-# ---------- Lasso ----------
-
-lasso_param_grid = {
-    "alpha": [0.001, 0.01, 0.1, 1.0, 10.0]
-}
-best_lasso = tune_model(
-    Lasso(max_iter=10000),  # 防止收敛问题
-    lasso_param_grid,
-    X_train,
-    y_train 
-)
-
-# y_pred_lasso = 
