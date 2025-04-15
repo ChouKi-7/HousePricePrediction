@@ -166,4 +166,48 @@ Tuned RandomForest 170676359.24    885379048.02 714702688.78             80.72
 （from Chou）总结：mae可以显示平均错了多少，平均误差多少，更适合用于评估整体稳定性。而mse对错的最大的更明显，如果看一组数据平均的话用mae，如果是看一组数据是否有那种差距极大的数据，比如豪宅价格和普通民居，mse更合适.	
 •	关注整体平均表现 → 用 MAE
 •	关注是否有极端错误 → 用 MSE
+
 1.2:尝试Lasso
+Lasso的作用
+	•	看哪些特征可以“剪掉”
+	•	看更简单的模型表现能否继续维持
+	•	理解哪些特征真的在影响房价
+
+执行结果：（ridge部分也进行了修改，之前的结果是错的，但分析方向是对的，此次结果说明ridge模型中，alpha=0.1的结果最好，alpha=20.0的结果变差（MAE和MSE均升高））
+-----------------------------
+Sale Price Mean: 180921.19589041095
+Validation MAE: 0.08995228590612239
+Train MAE:  0.06346046570435872
+Overfit Gap Rate: 29.45096940550409
+MAE after log inverse (真实房价下): 15030.64
+-----------------------------
+✅ Ridge Regression 结果:
+MAE_RIDGE (真实价格): 15001.43
+MSE_RIDGE (真实价格): 518563430.67
+Fitting 3 folds for each of 6 candidates, totalling 18 fits
+Best Params: {'alpha': 20.0}
+-----------------------------
+Ridge Regression (Best Alpha)
+MAE_RIDGE_BEST: 16588.35
+MSE_RIDGE_BEST: 652237697.1
+✅ Lasso 结果:
+MAE_LASSO (真实价格): 22735.69
+MSE_LASSO (真实价格): 1386562317.63
+Fitting 3 folds for each of 5 candidates, totalling 15 fits
+Best Params: {'alpha': 0.001}
+-----------------------------
+Lasso (Best Alpha)
+MAE_LASSO_BEST: 178827.81
+MSE_LASSO_BEST: 39649650005.96
+📌 选中的特征数量: 84 / 287
+🎯 被保留下来的特征（部分）：
+Index(['Id', 'MSSubClass', 'LotFrontage', 'LotArea', 'OverallQual',
+       'OverallCond', 'YearBuilt', 'YearRemodAdd', 'MasVnrArea', 'BsmtFinSF1',
+       'BsmtFinSF2', 'BsmtUnfSF', 'TotalBsmtSF', '1stFlrSF', '2ndFlrSF',
+       'LowQualFinSF', 'GrLivArea', 'BsmtFullBath', 'FullBath', 'HalfBath'],
+      dtype='object')
+
+结果分析：
+Lasso结果MAE升高，保留了84个模型，但是牺牲了准确性
+
+最终：Ridge（alpha=0.1）模型表现结果最好，MAE=15001.43，泛化能力最好。

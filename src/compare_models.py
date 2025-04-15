@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import Lasso
 from xgboost import XGBRegressor
 
 from utils import evaluate_model
@@ -64,7 +65,6 @@ best_rf = tune_model(
     X_train, 
     y_train
 )
-
 results.append(evaluate_model(
     "Tuned RandomForest",
     best_rf,
@@ -94,7 +94,6 @@ best_xgb = tune_model(
     X_train, 
     y_train
 )
-
 results.append(evaluate_model(
     "Tuned XGBoost",
     best_xgb,
@@ -108,3 +107,17 @@ result_df = result_df.sort_values(by="Validation MSE")
 print("-----------------------------")
 print("\n📊 Model Comparison Result:")
 print(result_df.to_string(index=False))
+
+# ---------- Lasso ----------
+
+lasso_param_grid = {
+    "alpha": [0.001, 0.01, 0.1, 1.0, 10.0]
+}
+best_lasso = tune_model(
+    Lasso(max_iter=10000),  # 防止收敛问题
+    lasso_param_grid,
+    X_train,
+    y_train 
+)
+
+# y_pred_lasso = 
