@@ -8,16 +8,13 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Lasso
 from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
+import joblib
 
 
 from utils import tune_model
 
 data = pd.read_csv("data/processed/clean_train.csv")
 
-'''
-线性回归(Linear Regression)
-MAE
-'''
 # 
 y = data['SalePrice']
 X = data.drop('SalePrice', axis = 1)
@@ -34,7 +31,9 @@ X_train,X_val,y_train,y_val = train_test_split(X_encoded,y_log,test_size=0.2,ran
 print("-----------------------------Linear")
 print("Sale Price Mean:", y.mean())
 
-#
+'''
+Linear Regression
+'''
 model = LinearRegression()
 model.fit(X_train, y_train)
 
@@ -57,7 +56,6 @@ print("-----------------------------")
 
 '''
 Ridgeを試す
-2025/4/11
 '''
 # LinearRegressionをRidgeに切り替え
 ridge_model = Ridge(alpha=0.1)
@@ -73,9 +71,9 @@ MAE_ridge = mean_absolute_error(y_val_real, y_pred_real_ridge)
 MSE_ridge = mean_squared_error(y_val_real, y_pred_real_ridge)
 
 print("-----------------------------Ridge")
-print("✅ Ridge Regression 结果:")
-print("MAE_RIDGE (真实价格):", round(MAE_ridge, 2))
-print("MSE_RIDGE (真实价格):", round(MSE_ridge, 2))
+print("✅ Ridge Regression Result:")
+print("MAE_RIDGE (real):", round(MAE_ridge, 2))
+print("MSE_RIDGE (real):", round(MSE_ridge, 2))
 print("-----------------------------")
 
 '''
@@ -117,16 +115,16 @@ MAE_lasso = mean_absolute_error(y_val_real,y_pred_real_lasso)
 MSE_lasso = mean_squared_error(y_val_real,y_pred_real_lasso)
 
 print("-----------------------------Lasso")
-print("✅ Lasso 结果:")
-print("MAE_LASSO (真实价格):", round(MAE_lasso, 2))
-print("MSE_LASSO (真实价格):", round(MSE_lasso, 2))
+print("✅ Lasso Result:")
+print("MAE_LASSO (real):", round(MAE_lasso, 2))
+print("MSE_LASSO (real):", round(MSE_lasso, 2))
 print("-----------------------------")
 
 lasso_param_grid = {
     "alpha": [0.001, 0.01, 0.1, 1.0, 10.0]
 }
 best_lasso = tune_model(
-    Lasso(max_iter=10000),  # 防止收敛问题
+    Lasso(max_iter=10000), 
     lasso_param_grid,
     X_train,
     y_train 
@@ -166,3 +164,13 @@ plt.axhline(y=min(maes), color='red', linestyle='--', label='Minimum MAE')
 plt.legend()
 plt.tight_layout()
 plt.show()
+
+'''
+通过对比结果得知ridge_model为最优模型
+保存该模型
+'''
+# 確定されたモデルを保存する
+joblib.dump(ridge_model, "model/final_ridge_model.pkl")
+# 訓練時に使用した特徴量の列順を保存
+np.save("model/train_columns.npy", X_encoded.columns)
+print("✅ 模型和特征列信息已保存。")

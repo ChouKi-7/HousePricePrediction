@@ -21,6 +21,7 @@ MAE
 y = data['SalePrice']
 X = data.drop('SalePrice', axis = 1)
 
+# one-hot encoding
 X_encoded = pd.get_dummies(X)
 
 # log変換処理追加
