@@ -4,9 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Lasso
-from xgboost import XGBRegressor
 import matplotlib.pyplot as plt
 import joblib
 

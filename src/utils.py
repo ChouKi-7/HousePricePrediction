@@ -1,11 +1,6 @@
-import pandas as pd
 import numpy as np
 from sklearn.model_selection import GridSearchCV
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor
-from xgboost import XGBRegressor
 
 def read_data(pata):
     return 
