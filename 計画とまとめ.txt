@@ -220,3 +220,5 @@ Todo：
  2.对test数据集进行预测
  3.分析数据结果
 
+1:ridge模型已保存到model/final_ridge_model.pkl
+2:分析结果已输出到result/result.csv
