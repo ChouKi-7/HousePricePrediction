@@ -6,6 +6,7 @@ from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.linear_model import Lasso
 import matplotlib.pyplot as plt
+import seaborn as sns
 import joblib
 
 
@@ -147,6 +148,24 @@ print("🎯 被保留下来的特征（部分）：")
 print(selected_features[:20])  
 print("-----------------------------")
 
+'''
+Lasso モデルで選ばれた特徴量同士の相関関係をヒートマップ(Heatmap)で可視化
+'''
+# # 提取 Lasso 选中的特征列
+# lasso_selected_data = X_train[selected_features]
+
+# # 计算相关性矩阵
+# corr = lasso_selected_data.corr()
+
+# # 可视化热力图
+# plt.figure(figsize=(12, 10))
+# sns.heatmap(corr, annot=True, cmap="coolwarm", fmt=".2f")
+# plt.title("Heatmap of Lasso-Selected Features", fontsize=16)
+# plt.xticks(rotation=45)
+# plt.yticks(rotation=0)
+# plt.tight_layout()
+# plt.show()
+
 # ---------- モデルごとのMAE（平均絶対誤差）を可視化 ----------
 # 各モデル（Linear, Ridge, Lassoなど）の予測誤差（MAE）を比較し、
 # どのモデルが最も安定しているか、過学習していないかを直感的に確認する。
@@ -167,8 +186,8 @@ plt.show()
 通过对比结果得知ridge_model为最优模型
 保存该模型
 '''
-# 確定されたモデルを保存する
-joblib.dump(ridge_model, "model/final_ridge_model.pkl")
-# 訓練時に使用した特徴量の列順を保存
-np.save("model/train_columns.npy", X_encoded.columns)
-print("✅ 模型和特征列信息已保存。")
+# # 確定されたモデルを保存する
+# joblib.dump(ridge_model, "model/final_ridge_model.pkl")
+# # 訓練時に使用した特徴量の列順を保存
+# np.save("model/train_columns.npy", X_encoded.columns)
+# print("✅ 模型和特征列信息已保存。")
