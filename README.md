@@ -4,11 +4,10 @@ Kaggle の「House Prices - Advanced Regression Techniques」コンペを題材�
 ---
 
 ## ディレクトリ構成:
-firstPython/
+HOUSEPRICEPREDICTION/
 ├── data/                         # データフォルダ
 │   ├── raw/                      # 元データ（train.csv / test.csv）
-│   └── p
-rocessed/               # 前処理後のデータ（clean_train.csv / clean_test.csv）
+│   └── processed/               # 前処理後のデータ（clean_train.csv / clean_test.csv）
 │
 ├── model/                       # モデルや特徴量ファイル保存用
 │   ├── final_ridge_model.pkl    # 学習済みモデル（Ridge）
