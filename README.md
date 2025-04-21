@@ -1,5 +1,6 @@
 # 🏠 住宅価格予測プロジェクト（House Price Prediction）※学習目的の実装（for practice）
-Kaggle の「House Prices - Advanced Regression Techniques」コンペを題材にした、回帰モデルによる住宅価格予測プロジェクトです。特徴量の前処理から複数モデルの比較、チューニング、予測まで一連の流れを実装しました。
+Kaggle の「House Prices - Advanced Regression Techniques」コンペを題材にした、回帰モデルによる住宅価格予測プロジェクトです。
+特徴量の前処理から複数モデルの比較、チューニング、予測まで一連の流れを実装しました。
 ---
 
 ## ディレクトリ構成:
@@ -68,7 +69,7 @@ rocessed/               # 前処理後のデータ（clean_train.csv / clean_tes
 
 ---
 
-## 結果（MAEベース）
+## 結果分析（MAEベース）
 
 最も精度の良かったモデルは **Ridge回帰（alpha=0.1）** で、log変換 + 適度な正則化により過学習を抑えながら安定した予測性能を得られました。
 
