@@ -10,7 +10,7 @@ test_data = pd.read_csv("data/processed/clean_test.csv")
 # one-hot encoding
 test_data_encoded = pd.get_dummies(test_data)
 
-#訓練時に存在したがテストデータにない列を補完
+#訓練時に存在したがテストデータにない列を0で補完
 missing_cols = set(train_columns) - set(test_data_encoded.columns)
 for col in missing_cols:
     test_data_encoded[col] = 0
@@ -31,5 +31,5 @@ result = pd.DataFrame({
     "SalePrice": pred_price_real
 })
 
-result.to_csv("result/result.csv", index=False)
+# result.to_csv("result/result.csv", index=False)
 print("resultが出力されました。")

@@ -37,14 +37,14 @@ model = LinearRegression()
 model.fit(X_train, y_train)
 
 y_pred = model.predict(X_val)
-MAE = mean_absolute_error(y_val, y_pred)
-print("Validation MAE:", MAE)
+MAE_linear = mean_absolute_error(y_val, y_pred)
+print("Validation MAE:", MAE_linear)
 
 train_pred = model.predict(X_train)
 train_MAE = mean_absolute_error(y_train, train_pred)
 
 print("Train MAE: ",train_MAE)
-print("Overfit Gap Rate:",(MAE - train_MAE) / MAE * 100)
+print("Overfit Gap Rate:",(MAE_linear - train_MAE) / MAE_linear * 100)
 
 y_pred_real = np.expm1(y_pred)
 y_val_real = np.expm1(y_val)
@@ -56,23 +56,31 @@ print("-----------------------------")
 '''
 Ridgeを試す
 '''
+# ---------- Ridge(L2) ----------
 # LinearRegressionをRidgeに切り替え
 ridge_model = Ridge(alpha=0.1)
 ridge_model.fit(X_train,y_train)
 
 y_pred_ridge = ridge_model.predict(X_val)
+MAE_ridge = mean_absolute_error(y_val, y_pred_ridge)
+
+train_pred_ridge = ridge_model.predict(X_train)
+train_MAE_ridge = mean_absolute_error(y_train, train_pred_ridge)
 
 # 还原为真实价格
 y_pred_real_ridge = np.expm1(y_pred_ridge)
 # y_val_real_ridge = np.expm1(y_val)
 
-MAE_ridge = mean_absolute_error(y_val_real, y_pred_real_ridge)
-MSE_ridge = mean_squared_error(y_val_real, y_pred_real_ridge)
+MAE_ridge_real = mean_absolute_error(y_val_real, y_pred_real_ridge)
+MSE_ridge_real = mean_squared_error(y_val_real, y_pred_real_ridge)
+
 
 print("-----------------------------Ridge")
 print("✅ Ridge Regression Result:")
-print("MAE_RIDGE (real):", round(MAE_ridge, 2))
-print("MSE_RIDGE (real):", round(MSE_ridge, 2))
+print("Overfit Gap Rate:",(MAE_ridge - train_MAE_ridge) / MAE_ridge * 100)
+print("MAE_RIDGE (log変換あり):", round(MAE_ridge, 2))
+print("MAE_RIDGE (real):", round(MAE_ridge_real, 2))
+print("MSE_RIDGE (real):", round(MSE_ridge_real, 2))
 print("-----------------------------")
 
 '''
@@ -100,23 +108,29 @@ print("MSE_RIDGE_BEST:", round(MSE_ridge_best, 2))
 print("-----------------------------")
 
 
-# ---------- Lasso ----------
+# ---------- Lasso(L1) ----------
 lasso_model = Lasso(max_iter=10000)
 lasso_model.fit(X_train, y_train)
 
 y_pred_lasso = lasso_model.predict(X_val)
+MAE_lasso = mean_absolute_error(y_val, y_pred_lasso)
+
+train_pred_lasso = lasso_model.predict(X_train)
+train_MAE_lasso = mean_absolute_error(y_train, train_pred_lasso)
 
 # 还原为真实价格
 y_pred_real_lasso = np.expm1(y_pred_lasso)
 # y_val_real_lasso = np.expm1(y_val)
 
-MAE_lasso = mean_absolute_error(y_val_real,y_pred_real_lasso)
-MSE_lasso = mean_squared_error(y_val_real,y_pred_real_lasso)
+MAE_lasso_real = mean_absolute_error(y_val_real,y_pred_real_lasso)
+MSE_lasso_real = mean_squared_error(y_val_real,y_pred_real_lasso)
 
 print("-----------------------------Lasso")
 print("✅ Lasso Result:")
-print("MAE_LASSO (real):", round(MAE_lasso, 2))
-print("MSE_LASSO (real):", round(MSE_lasso, 2))
+print("MAE_LASSO (log変換あり):", round(MAE_lasso, 2))
+print("Overfit Gap Rate:",(MAE_lasso - train_MAE_lasso) / MAE_lasso * 100)
+print("MAE_LASSO (real):", round(MAE_lasso_real, 2))
+print("MSE_LASSO (real):", round(MSE_lasso_real, 2))
 print("-----------------------------")
 
 lasso_param_grid = {
@@ -171,7 +185,7 @@ Lasso モデルで選ばれた特徴量同士の相関関係をヒートマッ�
 # どのモデルが最も安定しているか、過学習していないかを直感的に確認する。
 # 赤い破線は最小のMAEライン（最も良いモデル）を示す。
 model_names = ['Linear', 'Ridge', 'Ridge(Tuned)', 'Lasso', 'Lasso(Tuned)']
-maes = [MAE_real, MAE_ridge, MAE_ridge_best, MAE_lasso, MAE_lasso_best]
+maes = [MAE_real, MAE_ridge_real, MAE_ridge_best, MAE_lasso_real, MAE_lasso_best]
 
 plt.figure(figsize=(10, 6))
 plt.bar(model_names, maes, color='skyblue')
