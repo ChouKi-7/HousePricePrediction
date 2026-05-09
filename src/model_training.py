@@ -18,7 +18,16 @@ data = pd.read_csv("data/processed/clean_train.csv")
 y = data['SalePrice']
 X = data.drop('SalePrice', axis = 1)
 
+print("encoding前:*********************")
+print(X[['MSZoning', 'Street']].head(5))
 X_encoded = pd.get_dummies(X)
+
+print("encoding後:*********************")
+print(X_encoded.filter(like='MSZoning').head(5))
+
+print("*********************")
+print("encoding前列数:", X.shape[1])
+print("encoding後列数:", X_encoded.shape[1])
 
 # log変換処理追加
 y_log = np.log1p(y)
@@ -35,6 +44,12 @@ Linear Regression
 '''
 model = LinearRegression()
 model.fit(X_train, y_train)
+
+print("*********************")
+coef = pd.Series(model.coef_, index=X_encoded.columns)
+print("係数が大きい上位10列:")
+print(coef.abs().sort_values(ascending=False).head(10))
+print("係数がほぼゼロの列数:", (coef.abs() < 0.001).sum())
 
 y_pred = model.predict(X_val)
 MAE_linear = mean_absolute_error(y_val, y_pred)
@@ -142,6 +157,15 @@ best_lasso = tune_model(
     X_train,
     y_train 
 )
+
+print("*********************")
+coef_lasso = pd.Series(best_lasso.coef_, index=X_encoded.columns)
+print("Lassoで係数がゼロになった列数:", (coef_lasso == 0).sum())
+print("Lassoで残った列数:", (coef_lasso != 0).sum())
+print("\n残った上位10列:")
+print(coef_lasso.abs().sort_values(ascending=False).head(10))
+print("*********************")
+
 y_pred_lasso_best = best_lasso.predict(X_val)
 
 y_pred_real_lasso_best = np.expm1(y_pred_lasso_best)
