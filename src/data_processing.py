@@ -48,14 +48,16 @@
 # reduced_x.to_csv("data/processed/clean_train.csv", index=False)
 
 import pandas as pd
-from utils import handle_missing_values 
+from utils import handle_missing_values,add_features
 
 train_data = pd.read_csv("data/raw/train.csv")
 # drop columns with high missing rate + fill other missing values
 cleaned_data = handle_missing_values(train_data, drop_thresh=0.8)
+cleaned_data = add_features(cleaned_data)
 # save
 cleaned_data.to_csv("data/processed/clean_train.csv", index=False)
 
 test_data = pd.read_csv("data/raw/test.csv")
-clean_test = handle_missing_values(test_data, drop_thresh=0.8)
-clean_test.to_csv("data/processed/clean_test.csv", index=False)
+cleaned_test = handle_missing_values(test_data, drop_thresh=0.8)
+cleaned_test = add_features(cleaned_test)
+cleaned_test.to_csv("data/processed/clean_test.csv", index=False)

@@ -20,7 +20,7 @@ def handle_missing_values(df, drop_thresh=0.8, verbose=True):
     missing_ratio = df_copy.isnull().sum() / rows
     columns_to_drop = missing_ratio[missing_ratio > drop_thresh].index
     if verbose:
-        print(f"🗑️ Dropping columns with missing rate > {drop_thresh*100:.0f}%:")
+        print(f"✅ Dropping columns with missing rate > {drop_thresh*100:.0f}%:")
         print(list(columns_to_drop))
     df_copy.drop(columns=columns_to_drop, axis=1, inplace=True)
 
@@ -39,6 +39,38 @@ def handle_missing_values(df, drop_thresh=0.8, verbose=True):
     if verbose:
         print(f"\n✅ Missing value handling completed. Total remaining missing values: {total_missing}")
 
+    return df_copy
+
+def add_features(df):
+    df_copy = df.copy()
+    # 1. Combine area: basement + above ground living area(面积合并：地下室 + 地上居住面积)
+    df_copy['TotalSF'] = df_copy['TotalBsmtSF'] + df_copy['GrLivArea']
+    
+    # 2. Combine bathrooms: full + half(0.5) + basement full + basement half(0.5)
+    # 浴室合并：全浴 + 半浴(0.5) + 地下室全浴 + 地下室半浴(0.5)
+    df_copy['TotalBath'] = (df_copy['FullBath']
+                            + df_copy['HalfBath'] * 0.5
+                            + df_copy['BsmtFullBath']
+                            + df_copy['BsmtHalfBath'] * 0.5)
+
+    # 3. Combine porch areas(门廊面积合并)
+    df_copy['TotalPorchSF'] = (df_copy['OpenPorchSF']
+                                + df_copy['EnclosedPorch']
+                                + df_copy['3SsnPorch']
+                                + df_copy['ScreenPorch'])
+
+    # 4. Convert year to age(时间转换：年份 → 房龄)
+    df_copy['HouseAge'] = df_copy['YrSold'] - df_copy['YearBuilt']
+    df_copy['RemodAge'] = df_copy['YrSold'] - df_copy['YearRemodAdd']
+
+    # 5. Binary flags: has or not(有/没有 二值化)
+    df_copy['HasPool'] = (df_copy['PoolArea'] > 0).astype(int)
+    df_copy['HasDeck'] = (df_copy['WoodDeckSF'] > 0).astype(int)
+    df_copy['Has2ndFloor'] = (df_copy['2ndFlrSF'] > 0).astype(int)
+    df_copy['HasFireplace'] = (df_copy['Fireplaces'] > 0).astype(int)
+    df_copy['HasGarage'] = (df_copy['GarageArea'] > 0).astype(int)
+
+    print("✅ Feature engineering completed.")
     return df_copy
 
 def evaluate_model(name, model, X_train, X_val, y_train, y_val):
