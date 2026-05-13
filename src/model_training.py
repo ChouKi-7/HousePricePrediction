@@ -124,7 +124,7 @@ print("-----------------------------")
 
 
 # ---------- Lasso(L1) ----------
-lasso_model = Lasso(max_iter=10000)
+lasso_model = Lasso(max_iter=50000)
 lasso_model.fit(X_train, y_train)
 
 y_pred_lasso = lasso_model.predict(X_val)
@@ -152,7 +152,7 @@ lasso_param_grid = {
     "alpha": [0.001, 0.01, 0.1, 1.0, 10.0]
 }
 best_lasso = tune_model(
-    Lasso(max_iter=10000), 
+    Lasso(max_iter=50000), 
     lasso_param_grid,
     X_train,
     y_train 
@@ -220,12 +220,4 @@ plt.legend()
 plt.tight_layout()
 plt.show()
 
-'''
-通过对比结果得知ridge_model为最优模型
-保存该模型
-'''
-# # 確定されたモデルを保存する
-# joblib.dump(ridge_model, "model/final_ridge_model.pkl")
-# # 訓練時に使用した特徴量の列順を保存
-# np.save("model/train_columns.npy", X_encoded.columns)
-# print("✅ 模型和特征列信息已保存。")
+

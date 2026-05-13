@@ -19,7 +19,9 @@ HOUSEPRICEPREDICTION/
 ├── src/                         # ソースコード
 │   ├── data_processing.py       # 欠損処理など前処理関数
 │   ├── model_training.py        # モデル学習・比較・可視化
+│   ├── model_save.py            # モデル保存
 │   ├── evaluation.py            # テストデータ評価＆submission出力
+│   ├── eda.py                   # 探索的データ分析（欠損率・相関分析）
 │   ├── compare_models.py        # モデル評価・比較関数
 │   └── utils.py                 # ハイパーパラメータチューニングなどユーティリティ関数
 │
@@ -36,11 +38,22 @@ HOUSEPRICEPREDICTION/
 - カテゴリ：`"Missing"` で補完
 - One-hot encoding によるカテゴリ変換
 
+### 探索的データ分析（EDA）(2025/5/13)
+- 各列の欠損率を確認し、削除閾値（80%）の妥当性を検証
+- 数値列における0の割合を確認し、二値化が有効な列を特定
+- `SalePrice` との相関係数を算出し、特徴量エンジニアリングの方針を決定
+
+### 特徴量エンジニアリング(2025/5/13)
+- 面積列の統合：`TotalSF`（地下室 + 地上居住面積）、`TotalPorchSF`（各門廊の合計）
+- 浴室数の統合：`TotalBath`（全浴 + 半浴×0.5 + 地下室分）
+- 年代列を房齢に変換：`HouseAge`（売却年 − 建築年）、`RemodAge`（売却年 − 改装年）
+- 稀少設備の二値化：`HasPool`, `HasDeck`, `Has2ndFloor`, `HasFireplace`, `HasGarage`
+- 特徴量エンジニアリングの効果を線形・树モデル両方で検証し、線形モデルに対して軽微な改善を確認
+
 ### 特徴量変換
 - `SalePrice` に `np.log1p()` を適用（外れ値の影響を軽減）
 
 ### モデル構築・比較
-
 - `LinearRegression`, `Ridge`, `Lasso` をそれぞれ実装し、基本性能を評価  
 - `RandomForest`, `XGBoost` モデルも追加し、非線形モデルとの比較を実施  
 - `GridSearchCV` によるハイパーパラメータチューニングを実施  

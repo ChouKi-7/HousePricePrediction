@@ -31,5 +31,5 @@ result = pd.DataFrame({
     "SalePrice": pred_price_real
 })
 
-# result.to_csv("result/result.csv", index=False)
+result.to_csv("result/result.csv", index=False)
 print("resultが出力されました。")
